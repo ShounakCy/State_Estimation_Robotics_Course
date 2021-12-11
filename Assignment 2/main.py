@@ -43,7 +43,6 @@ def q5(u_k, position_var, C_k, R_inv_k, y_kd):
     W_inv = np.delete(W_inv, 0, 1)
     W_inv = W_inv.astype(np.float32)
 
-    # print(W_inv.dtype)
 
     # Q = np.diag(np.array([1] * K, dtype=np.float32)) * (pos_var)
     # R = np.diag(np.array([1] * K, dtype=np.float32)) * (meas_var)
@@ -56,7 +55,7 @@ def q5(u_k, position_var, C_k, R_inv_k, y_kd):
     z = z.astype(np.float32)
 
     lhs = H.T @ W_inv @ H
-    # np.save("q4_array", lhs)
+    np.save("q4_array", lhs)
     rhs = H.T @ W_inv @ z
 
     x_post = np.linalg.solve(lhs, rhs)
@@ -64,10 +63,15 @@ def q5(u_k, position_var, C_k, R_inv_k, y_kd):
     np.save("x_post", x_post)
 
 
-def plot(x_true, t, pos_var, delta):
+
+
+def plot(x_true, t, delta):
     x_post = np.load("x_post.npy")
     error = x_post - x_true
-    uncertainty = np.sqrt(pos_var) * 3
+    inv_cov = np.load("q4_array.npy")
+    x_var = np.linalg.inv(inv_cov)
+    x_var_diag = x_var.diagonal()
+    uncertainty = np.sqrt(x_var_diag) * 3
     abs_error = np.average(np.abs(x_post) - np.abs(x_true))
     # print("Avg Error :", abs_error)
     fig, ax = plt.subplots(2, 1, figsize=(10, 10), dpi=100)
@@ -110,7 +114,7 @@ if __name__ == '__main__':
     # true position, x_k, of the robot
     x_true = data["x_true"]
     # x_true = np.delete(x_true, 0, 0)
-    print(x_true)
+    #print(x_true)
     # data timestamps [s]
     t = data["t"]
     # speed, u_k
@@ -132,4 +136,4 @@ if __name__ == '__main__':
         C, R, y = batch_est(delta, y_k, meas_var)
         # print(C, R, y)
         q5(u, pos_var, C, R, y)
-        plot(x_true, t, pos_var, delta)
+        plot(x_true, t,  delta)
